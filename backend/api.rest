@@ -1,0 +1,78 @@
+@baseUrl = http://localhost:3333
+
+# @name GetAllOphanages
+GET {{baseUrl}}/orphanages HTTP/1.1
+
+###
+
+# @name GetOneOrphanage
+GET {{baseUrl}}/orphanages/1 HTTP/1.1
+
+###
+
+# @name CreateOrphanage(Deprecated)
+POST {{baseUrl}}/orphanages HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "Lar das Crianças",
+    "latitude": -30.0052359,
+    "longitude": -51.1733723,
+    "about": "Sobre o orfanato",
+    "instructions": "Venha visitar",
+    "openingHours": "Das 8h às 18h",
+    "openOnWeekends": true
+}
+
+###
+
+# @name CreateOrphanageMultipart
+POST {{baseUrl}}/orphanages HTTP/1.1
+Content-Type: multipart/form-data; boundary=---011000010111000001101001
+
+-----011000010111000001101001
+Content-Disposition: form-data; name="name"
+
+Lar das Crianças
+-----011000010111000001101001
+Content-Disposition: form-data; name="latitude"
+
+-30.0052359
+-----011000010111000001101001
+Content-Disposition: form-data; name="longitude"
+
+-51.1733723
+-----011000010111000001101001
+Content-Disposition: form-data; name="about"
+
+Sobre o orfanato
+-----011000010111000001101001
+Content-Disposition: form-data; name="instructions"
+
+Venha visitar
+-----011000010111000001101001
+Content-Disposition: form-data; name="openingHours"
+
+Das 8h às 18h
+-----011000010111000001101001
+Content-Disposition: form-data; name="openOnWeekends"
+
+true
+-----011000010111000001101001
+Content-Disposition: form-data; name="images"; filename="kids-1.jpg"
+Content-Type: image/jpg
+
+< ./imagesSample/kids-1.jpg
+-----011000010111000001101001--
+
+
+###
+
+# @name QueryParamsExample
+
+POST {{baseUrl}}/orphanages HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+name=foo&password=bar
+
+###
