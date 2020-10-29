@@ -3,15 +3,24 @@ import { StyleSheet, Text, View, Dimensions, TouchableOpacity } from 'react-nati
 import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps'
 import * as Location from 'expo-location'
 import { Feather } from '@expo/vector-icons'
-import {} from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
+import Spinner from 'react-native-loading-spinner-overlay'
 
 import mapMarker from '../images/map-marker.png'
-import { useNavigation } from '@react-navigation/native'
+import api from '../services/api'
+
+interface Orphanage {
+    id: number
+    latitude: number
+    longitude: number
+    name: string
+}
 
 export default function OrphanagesMap() {
     const [location, setLocation] = useState<Location.LocationObject>()
     const [errorMsg, setErrorMsg] = useState('')
     const navigation = useNavigation()
+    const [orphanages, setOrphanages] = useState<Orphanage[]>([])
 
     useEffect(() => {
         ;(async () => {
@@ -28,14 +37,28 @@ export default function OrphanagesMap() {
         })()
     }, [])
 
-    function handleNavigateToOrphanageDetails() {
-        navigation.navigate('OrphanageDetails')
+    useFocusEffect(() => {
+        api.get('orphanages').then(response => {
+            console.log('buscando dados')
+
+            setOrphanages(response.data)
+        })
+    })
+
+    function handleNavigateToOrphanageDetails(id: number) {
+        navigation.navigate('OrphanageDetails', { id })
+    }
+
+    function handleNavigateToCreateOrphanage() {
+        navigation.navigate('SelectMapPosition')
     }
 
     return (
         <View style={styles.container}>
             {errorMsg || !location ? (
-                <Text> Por favor, permita o acesso à sua localização e aguarde </Text>
+                <View style={styles.containerLoading}>
+                    <Spinner visible={true} />
+                </View>
             ) : (
                 <>
                     <MapView
@@ -48,32 +71,32 @@ export default function OrphanagesMap() {
                             longitudeDelta: 0.008,
                         }}
                     >
-                        <Marker
-                            icon={mapMarker}
-                            coordinate={{
-                                latitude: location.coords.latitude,
-                                longitude: location.coords.longitude,
-                            }}
-                            calloutAnchor={{
-                                x: 2.7,
-                                y: 0.8,
-                            }}
-                        >
-                            <Callout tooltip={true} onPress={handleNavigateToOrphanageDetails}>
-                                <View style={styles.calloutContainer}>
-                                    <Text style={styles.calloutText}>Por favor, permita o acesso à sua localização e aguarde</Text>
-                                </View>
-                            </Callout>
-                        </Marker>
+                        {orphanages.map(orphanage => {
+                            return (
+                                <Marker
+                                    key={orphanage.id}
+                                    icon={mapMarker}
+                                    coordinate={{
+                                        latitude: orphanage.latitude,
+                                        longitude: orphanage.longitude,
+                                    }}
+                                    calloutAnchor={{
+                                        x: 2.7,
+                                        y: 0.8,
+                                    }}
+                                >
+                                    <Callout tooltip={true} onPress={() => handleNavigateToOrphanageDetails(orphanage.id)}>
+                                        <View style={styles.calloutContainer}>
+                                            <Text style={styles.calloutText}>{orphanage.name}</Text>
+                                        </View>
+                                    </Callout>
+                                </Marker>
+                            )
+                        })}
                     </MapView>
                     <View style={styles.footer}>
-                        <Text style={styles.footerText}>asdasdasdasdasdsa</Text>
-                        <TouchableOpacity
-                            style={styles.createOrphanageButton}
-                            onPress={() => {
-                                alert('click')
-                            }}
-                        >
+                        <Text style={styles.footerText}>{orphanages.length} orfanatos encontrados</Text>
+                        <TouchableOpacity style={styles.createOrphanageButton} onPress={handleNavigateToCreateOrphanage}>
                             <Feather name='plus' size={20} color='#fff'></Feather>
                         </TouchableOpacity>
                     </View>
@@ -88,6 +111,11 @@ const styles = StyleSheet.create({
         flex: 1,
         textAlign: 'center',
         justifyContent: 'center',
+    },
+    containerLoading: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     map: {
         width: Dimensions.get('window').width,
